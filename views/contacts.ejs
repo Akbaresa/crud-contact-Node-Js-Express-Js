@@ -1,0 +1,180 @@
+<!-- views/contacts.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact List</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+
+    <div class="container mt-5">
+        <h2 class="mb-4">Add New Contact</h2>
+    
+        <!-- Form for adding a new contact -->
+        <form action="/tambah" method="post">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone:</label>
+                <input type="tel" class="form-control" id="phone" name="phone" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Contact</button>
+        </form>
+    </div>
+
+    <div class="container mt-5">
+        <h2 class="mb-4">Contact List</h2>
+    
+        <ul class="list-group">
+            <% contacts.forEach(contact => { %>
+                <li class="list-group-item">
+                    <strong>Name:</strong> <%= contact.name %><br>
+                    <strong>Email:</strong> <%= contact.email %><br>
+                    <strong>Phone:</strong> <%= contact.phone %>
+    
+                    <!-- Edit Button -->
+                    <button class="btn btn-sm btn-info ml-2" data-toggle="modal" data-target="#editModal<%= contact._id %>">
+                        Edit
+                    </button>
+    
+                    <!-- Delete Button -->
+                    <button class="btn btn-sm btn-danger ml-2" data-toggle="modal" data-target="#deleteModal<%= contact._id %>">
+                        Delete
+                    </button>
+                </li>
+    
+ <!-- Edit Modal -->
+ <div class="modal fade" id="editModal<%= contact._id %>" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Edit Contact</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Edit Form -->
+                <form id="editForm<%= contact._id %>">
+                    <div class="form-group">
+                        <label for="editName<%= contact._id %>">Name:</label>
+                        <input type="text" class="form-control" id="editName<%= contact._id %>" value="<%= contact.name %>">
+                    </div>
+                    <div class="form-group">
+                        <label for="editEmail<%= contact._id %>">Email:</label>
+                        <input type="email" class="form-control" id="editEmail<%= contact._id %>" value="<%= contact.email %>">
+                    </div>
+                    <div class="form-group">
+                        <label for="editPhone<%= contact._id %>">Phone:</label>
+                        <input type="tel" class="form-control" id="editPhone<%= contact._id %>" value="<%= contact.phone %>">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveChanges('<%= contact._id %>')">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+               <!-- Delete Modal -->
+<div class="modal fade" id="deleteModal<%= contact._id %>" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Delete Contact</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this contact?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <!-- Add hidden input to store contact ID -->
+                <input type="hidden" id="deleteContactId" value="<%= contact._id %>">
+                <!-- Update the "Delete" button to trigger the deleteContact function -->
+                <button type="button" class="btn btn-danger" onclick="deleteContact('<%= contact._id %>')">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+            <% }) %>
+        </ul>
+    </div>
+
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+
+<!-- Bootstrap JS -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+
+<script>
+    
+    jQuery.noConflict();
+    function saveChanges(contactId) {
+        // Get values from the form
+        const name = document.getElementById(`editName${contactId}`).value;
+        const email = document.getElementById(`editEmail${contactId}`).value;
+        const phone = document.getElementById(`editPhone${contactId}`).value;
+
+        // Send AJAX request to the server
+        jQuery.ajax({
+            url: `/${contactId}`,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ name, email, phone }),
+            success: function (response) {
+                // Handle the response from the server
+                console.log(response);
+
+                // Close the modal after saving changes
+                $(`#editModal${contactId}`).modal('hide');
+            },
+            error: function (error) {
+                // Handle errors
+                console.error(error);
+            }
+        });
+    }
+
+    function deleteContact(contactId) {
+        console.log(contactId)
+        // Send AJAX request to the server
+        jQuery.ajax({
+            url: `/${contactId}`,
+            method: 'DELETE',
+            contentType: 'application/json',
+            success: function (response) {
+                // Handle the response from the server
+                console.log(response);
+
+                // Close the modal after deletion
+                $(`#deleteModal${contactId}`).modal('hide');
+            },
+            error: function (error) {
+                // Handle errors
+                console.error(error);
+            }
+        });
+    }
+</script>
+</body>
+</html>
